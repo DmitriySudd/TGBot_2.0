@@ -4,7 +4,8 @@ import logging
 from aiogram import Dispatcher, Bot
 from aiogram.types import BotCommand
 
-from commands import register_user_commands, bot_commands
+from commands import register_user_commands
+from commands.bot_commands import bot_commands
 
 
 async def main() -> None:
