@@ -1,4 +1,4 @@
-__all__ = ['start']
+__all__ = ['register_user_commands']
 
 from aiogram import Router
 from aiogram.filters.command import CommandStart
