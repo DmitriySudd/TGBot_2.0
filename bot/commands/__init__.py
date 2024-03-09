@@ -3,7 +3,7 @@ __all__ = ['register_user_commands']
 from aiogram import Router
 from aiogram.filters.command import CommandStart
 
-from bot.commands import start
+from bot.commands.start import start
 
 
 def register_user_commands(router: Router) -> None:
