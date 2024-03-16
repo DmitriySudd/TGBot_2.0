@@ -2,7 +2,6 @@ import json
 import os
 from aiogram import types, Router, F
 from aiogram.filters import Command
-from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 from data.database import get_quiz_index, get_user_score, update_quiz_index, update_user_score
@@ -23,8 +22,7 @@ def generate_options_keyboard(answer_options, r_answer):
     for option in answer_options:
         builder.add(types.InlineKeyboardButton(
             text=option,
-            callback_data=f"right_answer|{option}" if option == r_answer else f"wrong_answer|{option}",
-            chat_instance=option if option == r_answer else "")
+            callback_data=f"right_answer|{option}" if option == r_answer else f"wrong_answer|{option}")
         )
     builder.adjust(1)
     return builder.as_markup()
