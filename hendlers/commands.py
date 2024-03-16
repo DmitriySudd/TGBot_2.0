@@ -2,6 +2,7 @@ import json
 import os
 from aiogram import types, Router, F
 from aiogram.filters import Command
+from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 from data.database import get_quiz_index, get_user_score, update_quiz_index, update_user_score
@@ -22,14 +23,14 @@ def generate_options_keyboard(answer_options, r_answer):
     for option in answer_options:
         builder.add(types.InlineKeyboardButton(
             text=option,
-            callback_data="right_answer" if option == r_answer else "wrong_answer")
+            callback_data=f"right_answer|{option}" if option == r_answer else f"wrong_answer|{option}",
+            chat_instance=option if option == r_answer else "")
         )
-
     builder.adjust(1)
     return builder.as_markup()
 
 
-@router.callback_query(F.data == "right_answer")
+@router.callback_query(F.data.split('|')[0] == 'right_answer')
 async def right_answer(callback: types.CallbackQuery):
 
     await callback.bot.edit_message_reply_markup(
@@ -37,9 +38,12 @@ async def right_answer(callback: types.CallbackQuery):
         message_id=callback.message.message_id,
         reply_markup=None
     )
+    await callback.message.answer(f"Ваш ответ: {callback.data.split('|')[1]}")
     await callback.message.answer("Верно!")
     current_question_index = await get_quiz_index(callback.from_user.id)
     current_score = await get_user_score(callback.from_user.id)
+    correct_option = quiz_data[current_question_index]['correct_option']
+
     # Обновление номера текущего вопроса в базе данных
     current_question_index += 1
     current_score += 1
@@ -52,7 +56,7 @@ async def right_answer(callback: types.CallbackQuery):
         await callback.message.answer(f"Это был последний вопрос. Квиз завершен!\nВаш результат: {current_score} правильных ответов")
 
 
-@router.callback_query(F.data == "wrong_answer")
+@router.callback_query(F.data.split('|')[0] == "wrong_answer")
 async def wrong_answer(callback: types.CallbackQuery):
     await callback.bot.edit_message_reply_markup(
         chat_id=callback.from_user.id,
@@ -63,6 +67,7 @@ async def wrong_answer(callback: types.CallbackQuery):
     current_question_index = await get_quiz_index(callback.from_user.id)
     current_score = await get_user_score(callback.from_user.id)
     correct_option = quiz_data[current_question_index]['correct_option']
+    await callback.message.answer(f"Ваш ответ: {callback.data.split('|')[1]}")
     await callback.message.answer(f"Неправильно. Правильный ответ: {quiz_data[current_question_index]['options'][correct_option]}")
     # Обновление номера текущего вопроса в базе данных
     current_question_index += 1
@@ -79,7 +84,6 @@ async def wrong_answer(callback: types.CallbackQuery):
 async def cmd_start(message: types.Message):
     builder = ReplyKeyboardBuilder()
     builder.add(types.KeyboardButton(text="Начать игру"))
-
     await message.answer("Добро пожаловать в квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
 
 
